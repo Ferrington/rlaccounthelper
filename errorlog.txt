@@ -1,0 +1,6 @@
+* Hostname was found in DNS cache
+* Hostname in DNS cache was stale, zapped
+*   Trying 2400:cb00:2048:1::681b:8626...
+* Connected to api.rocketleaguestats.com (2400:cb00:2048:1::681b:8626) port 443 (#8)
+* SSL certificate problem: unable to get local issuer certificate
+* Closing connection 8

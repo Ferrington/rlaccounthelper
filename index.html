@@ -8,7 +8,7 @@
     <style>
         .add-account {
             margin: 50px auto;
-            max-width:1024px;
+            max-width:768px;
         }
         h1 {
             text-align:center;
@@ -20,6 +20,12 @@
         .account-table-container {
             margin:50px auto;
             max-width:1024px;
+            min-height:400px;
+        }
+        .rls-container {
+            margin:50px auto;
+            max-width:1024px;
+            text-align:center;
         }
     </style>
   </head>
@@ -27,22 +33,18 @@
     <div class="container-fluid">
         <h1>RL Account Helper</h1>
         <div class="form-row add-account">
-          <div class="col-md-3">
+          <div class="col-md-5">
             <label for="steam-id">Steam ID</label>
             <input type="text" class="form-control" id="steam-id" placeholder="Required">
             <div class="invalid-feedback">
                 Please enter a steamID.
             </div>
           </div>
-          <div class="col-md-3">
+          <div class="col-md-5">
             <label for="account-name">Account Name</label>
             <input type="text" class="form-control" id="account-name">
           </div>
-          <div class="col-md-3">
-            <label for="display-name">Display Name</label>
-            <input type="text" class="form-control" id="display-name">
-          </div>
-          <div class="col-md-3">
+          <div class="col-md-2">
             <label>&nbsp;</label>
             <button type="button" class="btn btn-primary btn-block" id="add-account">Add Account</button>
           </div>
@@ -65,20 +67,23 @@
             </tbody>
           </table>
         </div>
-        
+        <div class="rls-container">
+          <a href="https://rocketleaguestats.com" alt="Rocket League Stats Banner">
+            <img src="rls_partner_horizontal_small.png">
+          </a>
+        </div>
     </div>
-    
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script
+			  src="https://code.jquery.com/jquery-3.3.1.min.js"
+			  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+			  crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
     <script>
-        $(function() {
-            $.post('rlaccounthelper.php', function(data) {
+        function validate_steam_id(id) {
+            $.post('rlaccounthelper.php', {steam_id: id, method: 'validate'}, function(data) {
                 console.log(data);
             });
-        });
-        function validate_steam_id(id) {
-            //$.post...
         }
         function has_required_field() {
             if (!$('#steam-id').val()) {
@@ -102,7 +107,7 @@
             var account_name = $('#account-name').val();
             var display_name = $('display-name').val();
             
-            
+            validate_steam_id(steam_id);
             
             
         });
