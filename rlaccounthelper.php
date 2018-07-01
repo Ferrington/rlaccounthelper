@@ -5,7 +5,7 @@ $steam_id = $_POST['steam_id'];
 
 //logic
 if ($_POST['method'] == 'validate') {
-    echo validate_steam_id($steam_id);
+    echo validate_steam_id($steam_id, $api_key);
 }
 
 //functions
