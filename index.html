@@ -75,7 +75,7 @@
         </div>
         <div class="rls-container">
           <a href="https://rocketleaguestats.com" alt="Rocket League Stats Banner">
-            <img src="rls_partner_horizontal_small.png">
+            <img src="imgs/rls_partner_horizontal_small.png">
           </a>
         </div>
     </div>
@@ -104,7 +104,7 @@
             }
             
             //tries to get display_name - if returns false, no such id exists
-            $.post('rlaccounthelper.php', {steam_id: steam_id, method: 'validate'}).then(function(data) {
+            $.post('ajax/rlaccounthelper.php', {steam_id: steam_id, method: 'get_display_name'}).then(function(data) {
                 if (data === 'false') {
                     $('.invalid-steam-id').show();
                     $('#steam-id').addClass('is-invalid');

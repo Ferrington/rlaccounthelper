@@ -4,12 +4,12 @@ $api_key = include('api_key.php');
 $steam_id = $_POST['steam_id'];
 
 //logic
-if ($_POST['method'] == 'validate') {
-    echo validate_steam_id($steam_id, $api_key);
+if ($_POST['method'] == 'get_display_name') {
+    echo get_display_name($steam_id, $api_key);
 }
 
 //functions
-function validate_steam_id($id, $api_key) {
+function get_display_name($id, $api_key) {
     $curl = curl_init();
     $url = "https://api.rocketleaguestats.com/v1/player?unique_id=". $id ."&platform_id=1&apikey=". $api_key;
 
