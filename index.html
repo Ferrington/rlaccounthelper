@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <title>RL Account Helper</title>
     <style>
         .add-account {
@@ -67,6 +68,7 @@
                 <th scope="col">Doubles</th>
                 <th scope="col">Solo Standard</th>
                 <th scope="col">Standard</th>
+                <th scope="col"></th>
               </tr>
             </thead>
             <tbody>
@@ -85,8 +87,12 @@
 			  crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
     <script>
         var account_data = {};
+        $(function() {
+            //account_data = get_cookie();
+        });
         function check_new_account() {
             clear_error();
             if (!has_required_field()) {
@@ -102,7 +108,7 @@
                 clear_fields();
                 return;
             }
-            
+
             //tries to get display_name - if returns false, no such id exists
             $.post('ajax/rlaccounthelper.php', {steam_id: steam_id, method: 'get_display_name'}).then(function(data) {
                 if (data === 'false') {
@@ -111,11 +117,11 @@
                     $('#add-account').prop('disabled', false);
                     return;
                 }
+                
                 add_account(steam_id, data);
                 clear_fields();
                 $('#add-account').prop('disabled', false);
-                
-            }, function() {
+            }, function(data) {
                 $('.bad-things').show();
                 $('#add-account').prop('disabled', false);
             });
@@ -133,8 +139,8 @@
                 solo_standard: '',
                 standard: ''
             };
-            
-            update_cookie();
+
+            //update_cookie();
             populate_table();
         }
         function populate_table() {
@@ -148,14 +154,15 @@
                 html += "<td>"+ account_data[i]['solo_duel'] +"</td>";
                 html += "<td>"+ account_data[i]['doubles'] +"</td>";
                 html += "<td>"+ account_data[i]['solo_standard'] +"</td>";
-                html += "<td>"+ account_data[i]['standard'] +"</td></tr>";
+                html += "<td>"+ account_data[i]['standard'] +"</td>";
+                html += "<td><button type='button' class='btn btn-default btn-sm'><span class='fa fa-remove remove-account' aria-hidden='true'></span></button></td></tr>";
                 $('#account-table tbody').append(html);
             }
         }
         function is_in_account_data(steam_id) {
             var check = false;
             $.each(account_data, function(key, value) {
-                if (value.steam_id = steam_id) {
+                if (value.steam_id == steam_id) {
                     check = true;
                 }
             });
@@ -166,7 +173,15 @@
             $('.add-account input').val('');
         }
         function update_cookie() {
-            //update cookie
+            Cookies.set('rlaccounthelper', account_data);
+        }
+        function get_cookie() {
+            var cookie = Cookies.getJSON('rlaccounthelper');
+            if (cookie === undefined) {
+                return {};
+            } else {
+                return cookie;
+            }
         }
         function has_required_field() {
             if (!$('#steam-id').val()) {
@@ -181,8 +196,12 @@
             $('#steam-id').removeClass('is-invalid');
         }
         $('#add-account').click(check_new_account);
-        $('#steam-id').keyup(function() {
-            clear_error();
+        $('#steam-id').keyup(clear_error);
+        $('.add-account input').keypress(function(e) {
+            var key = e.which;
+            if (key ==13) {
+                $('#add-account').click();
+            }
         });
     </script>
   </body>
