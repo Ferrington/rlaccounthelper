@@ -36,8 +36,14 @@
           <div class="col-md-5">
             <label for="steam-id">Steam ID</label>
             <input type="text" class="form-control" id="steam-id" placeholder="Required">
-            <div class="invalid-feedback">
-                Please enter a steamID.
+            <div class="invalid-feedback lacking-steam-id">
+                Please enter a Steam ID.
+            </div>
+            <div class="invalid-feedback invalid-steam-id">
+                Invalid Steam ID
+            </div>
+            <div class="invalid-feedback bad-things">
+                Something went wrong...
             </div>
           </div>
           <div class="col-md-5">
@@ -80,14 +86,91 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
     <script>
-        function validate_steam_id(id) {
-            $.post('rlaccounthelper.php', {steam_id: id, method: 'validate'}, function(data) {
-                console.log(data);
+        var account_data = {};
+        function check_new_account() {
+            clear_error();
+            if (!has_required_field()) {
+                return;
+            }
+            
+            $('#add-account').prop('disabled', true);
+            
+            var steam_id = $('#steam-id').val();
+            
+            //check if account is already in list
+            if (is_in_account_data(steam_id)) {
+                clear_fields();
+                return;
+            }
+            
+            //tries to get display_name - if returns false, no such id exists
+            $.post('rlaccounthelper.php', {steam_id: steam_id, method: 'validate'}).then(function(data) {
+                if (data === 'false') {
+                    $('.invalid-steam-id').show();
+                    $('#steam-id').addClass('is-invalid');
+                    $('#add-account').prop('disabled', false);
+                    return;
+                }
+                add_account(steam_id, data);
+                clear_fields();
+                $('#add-account').prop('disabled', false);
+                
+            }, function() {
+                $('.bad-things').show();
+                $('#add-account').prop('disabled', false);
             });
+        }
+        function add_account(steam_id, display_name) {
+            var account_name = $('#account-name').val();            
+            var object_count = Object.keys(account_data).length;
+            
+            account_data[object_count] = {
+                steam_id: steam_id, 
+                account_name: account_name, 
+                display_name: display_name,
+                solo_duel: '',
+                doubles: '',
+                solo_standard: '',
+                standard: ''
+            };
+            
+            update_cookie();
+            populate_table();
+        }
+        function populate_table() {
+            var object_count = Object.keys(account_data).length;
+            
+            $('#account-table tbody').html('');
+            for (let i=0; i < object_count; i++) {
+                let html = "<tr><td>"+ account_data[i]['steam_id'] +"</td>";
+                html += "<td>"+ account_data[i]['account_name'] +"</td>";
+                html += "<td>"+ account_data[i]['display_name'] +"</td>";
+                html += "<td>"+ account_data[i]['solo_duel'] +"</td>";
+                html += "<td>"+ account_data[i]['doubles'] +"</td>";
+                html += "<td>"+ account_data[i]['solo_standard'] +"</td>";
+                html += "<td>"+ account_data[i]['standard'] +"</td></tr>";
+                $('#account-table tbody').append(html);
+            }
+        }
+        function is_in_account_data(steam_id) {
+            var check = false;
+            $.each(account_data, function(key, value) {
+                if (value.steam_id = steam_id) {
+                    check = true;
+                }
+            });
+            
+            return check;
+        }
+        function clear_fields() {
+            $('.add-account input').val('');
+        }
+        function update_cookie() {
+            //update cookie
         }
         function has_required_field() {
             if (!$('#steam-id').val()) {
-                $('.invalid-feedback').show();
+                $('.lacking-steam-id').show();
                 $('#steam-id').addClass('is-invalid');
                 return false;
             }
@@ -97,19 +180,9 @@
             $('.invalid-feedback').hide();
             $('#steam-id').removeClass('is-invalid');
         }
-        $('#add-account').click(function() {
-            if (!has_required_field()) {
-                return;
-            }
+        $('#add-account').click(check_new_account);
+        $('#steam-id').keyup(function() {
             clear_error();
-            
-            var steam_id = $('#steam-id').val();
-            var account_name = $('#account-name').val();
-            var display_name = $('display-name').val();
-            
-            validate_steam_id(steam_id);
-            
-            
         });
     </script>
   </body>
