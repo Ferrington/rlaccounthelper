@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+    <title>RL Account Helper</title>
+    <style>
+        .add-account {
+            margin: 50px auto;
+            max-width:1024px;
+        }
+        h1 {
+            text-align:center;
+            margin: 25px;
+        }
+        label {
+            white-space: nowrap;
+        }
+        .account-table-container {
+            margin:50px auto;
+            max-width:1024px;
+        }
+    </style>
+  </head>
+  <body>
+    <div class="container-fluid">
+        <h1>RL Account Helper</h1>
+        <div class="form-row add-account">
+          <div class="col-md-3">
+            <label for="steam-id">Steam ID</label>
+            <input type="text" class="form-control" id="steam-id" placeholder="Required">
+            <div class="invalid-feedback">
+                Please enter a steamID.
+            </div>
+          </div>
+          <div class="col-md-3">
+            <label for="account-name">Account Name</label>
+            <input type="text" class="form-control" id="account-name">
+          </div>
+          <div class="col-md-3">
+            <label for="display-name">Display Name</label>
+            <input type="text" class="form-control" id="display-name">
+          </div>
+          <div class="col-md-3">
+            <label>&nbsp;</label>
+            <button type="button" class="btn btn-primary btn-block" id="add-account">Add Account</button>
+          </div>
+        </div>
+        
+        <div class="account-table-container">
+          <table class="table" id="account-table">
+            <thead class="thead-light">
+              <tr>
+                <th scope="col">Steam ID</th>
+                <th scope="col">Account Name</th>
+                <th scope="col">Display Name</th>
+                <th scope="col">Solo Duel</th>
+                <th scope="col">Doubles</th>
+                <th scope="col">Solo Standard</th>
+                <th scope="col">Standard</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </div>
+        
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
+    <script>
+        function has_required_field() {
+            if (!$('#steam-id').val()) {
+                $('.invalid-feedback').show();
+                $('#steam-id').addClass('is-invalid');
+                return false;
+            }
+            return true;
+        }
+        function clear_error() {
+            $('.invalid-feedback').hide();
+            $('#steam-id').removeClass('is-invalid');
+        }
+        $('#add-account').click(function() {
+            if (!has_required_field()) {
+                return;
+            }
+            clear_error();
+            
+            var steam_id = $('#steam-id').val();
+            var account_name = $('#account-name').val();
+            var display_name = $('display-name').val();
+            
+            
+            
+        });
+    </script>
+  </body>
+</html>
