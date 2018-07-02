@@ -58,6 +58,9 @@
             <div class="invalid-feedback bad-things">
                 Something went wrong...
             </div>
+            <div class="invalid-feedback too-many-accounts">
+                Sorry, you can track a maximum of 20 accounts!
+            </div>
           </div>
           <div class="col-md-5">
             <label for="account-name">Account Name</label>
@@ -134,14 +137,15 @@
                 $('#add-account').click();
             }
         });
-        $('#update-ranks').click(function() {
-                
-        });
+        $('#update-ranks').click(update_ranks);
         
         //functions        
+        function update_ranks() {
+            //
+        }
         function check_new_account() {
             clear_error();
-            if (!has_required_field()) {
+            if (missing_required_field() or has_too_many_accounts()) {
                 $('#steam-id').focus();
                 return;
             }
@@ -231,13 +235,23 @@
                 return cookie;
             }
         }
-        function has_required_field() {
+        function missing_required_field() {
             if (!$('#steam-id').val()) {
                 $('.lacking-steam-id').show();
                 $('#steam-id').addClass('is-invalid');
-                return false;
+                return true;
             }
-            return true;
+            return false;
+        }
+         function has_too_many_accounts() {
+            var object_count = Object.keys(account_data).length;
+            
+            if (object_count >= 20) {
+                $('.too-many-accounts').show();
+                $('#steam-id').addClass('is-invalid');
+                return true;
+            }
+            return false;
         }
         function start_loading_animation($this) {
             var loading_text = '<i class="fa fa-circle-o-notch fa-spin"></i> Loading';
