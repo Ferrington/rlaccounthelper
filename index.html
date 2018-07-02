@@ -141,10 +141,15 @@
         
         //functions        
         function update_ranks() {
+            start_loading_animation($('#update-ranks'));
             $.post('ajax/rlaccounthelper.php', {account_data: account_data, method: 'get_rank_info'}).then(function(data) {
                 console.log(data);
+                //account_data = JSON.parse(data);
+                //draw_table();
+                stop_loading_animation($('#update-ranks'));
             }, function(data) {
                 console.log(data);
+                stop_loading_animation($('#update-ranks'));
             });
             //
         }

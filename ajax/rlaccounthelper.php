@@ -3,19 +3,20 @@
 define("SEASON", 8);
 
 $api_key = include('api_key.php');
-if (isset($_POST['steam_id'])) {
-    $steam_id = $_POST['steam_id'];
-}
-if (isset($_POST['account_data'])) {
-    $account_data = $_POST['account_data'];
-}
+$config = include('config.php');
 
 
 //logic
 if ($_POST['method'] == 'get_display_name') {
+    if (isset($_POST['steam_id'])) {
+        $steam_id = $_POST['steam_id'];
+    }
     echo get_display_name($steam_id, $api_key);
 } elseif ($_POST['method'] == 'get_rank_info') {
-    print_r(get_rank_info($account_data, $api_key));
+    if (isset($_POST['account_data'])) {
+        $account_data = $_POST['account_data'];
+    }
+    echo get_rank_info($account_data, $api_key);
 }
 
 //functions
@@ -47,6 +48,7 @@ function get_rank_info($account_data, $api_key) {
         12 => 'solo_standard', 
         13 => 'standard'
     );
+
     foreach ($account_data as $key => $value) { 
         $payload_arr[$batch][] = array("platformId" => "1", "uniqueId" => $value['steam_id']);
         $i++;
@@ -68,9 +70,11 @@ function get_rank_info($account_data, $api_key) {
         
         $response = json_decode(curl_exec($curl),true);
     
+        print_r($account_data);
+        die();
         foreach ($response as $i => $player) {
             $account_index = $batch * 10 + $i;
-            
+            die($account_index);
             foreach ($game_modes as $mode_number => $game_mode) {
                 $account_data[$account_index][$game_mode]['mmr'] = $player['rankedSeasons'][SEASON][$mode_number]['rankPoints'];
                 $account_data[$account_index][$game_mode]['tier'] = $player['rankedSeasons'][SEASON][$mode_number]['tier'];
@@ -80,5 +84,5 @@ function get_rank_info($account_data, $api_key) {
         }
     }
     
-    return $account_data;
+    return json_encode($account_data);
 }
