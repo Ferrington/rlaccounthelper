@@ -7,9 +7,27 @@
     <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <title>RL Account Helper</title>
     <style>
+        html {
+          position: relative;
+          min-height: 100%;
+        }
+        body {
+          margin-bottom: 200px; /* Margin bottom by footer height */
+        }
+        .rls-container {
+          position: absolute;
+          bottom: 0;
+          width: 100%;
+          height: 150px; /* Set the fixed height of the footer here */
+          line-height: 150px; /* Vertically center the text there */
+          text-align:center;
+        }
         .add-account {
             margin: 50px auto;
             max-width:768px;
+        }
+        .update-button-container {
+            text-align:center;
         }
         h1 {
             text-align:center;
@@ -19,20 +37,14 @@
             white-space: nowrap;
         }
         .account-table-container {
-            margin:50px auto;
+            margin:20px auto;
             max-width:1024px;
-            min-height:400px;
-        }
-        .rls-container {
-            margin:50px auto;
-            max-width:1024px;
-            text-align:center;
         }
     </style>
   </head>
   <body>
     <div class="container-fluid">
-        <h1>RL Account Helper</h1>
+        <h1>Rocket League Account Helper</h1>
         <div class="form-row add-account">
           <div class="col-md-5">
             <label for="steam-id">Steam ID</label>
@@ -57,6 +69,10 @@
           </div>
         </div>
         
+        <div class="update-button-container">
+            <button type="button" class="btn btn-primary" id="update-ranks">Update Ranks</button>
+        </div>
+        
         <div class="account-table-container">
           <table class="table" id="account-table">
             <thead class="thead-light">
@@ -75,11 +91,12 @@
             </tbody>
           </table>
         </div>
-        <div class="rls-container">
-          <a href="https://rocketleaguestats.com" alt="Rocket League Stats Banner">
-            <img src="imgs/rls_partner_horizontal_small.png">
-          </a>
-        </div>
+       
+    </div>
+    <div class="rls-container">
+      <a href="https://rocketleaguestats.com" alt="Rocket League Stats Banner">
+        <img src="imgs/rls_partner_horizontal_small.png">
+      </a>
     </div>
     <script
 			  src="https://code.jquery.com/jquery-3.3.1.min.js"
@@ -89,23 +106,54 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
     <script>
+    
+        //set global
         var account_data = {};
+        
+        //on load events
         $(function() {
-            //account_data = get_cookie();
+            account_data = get_cookie();
+            draw_table();
         });
+        
+        //triggers
+        $('#add-account').click(function() {  
+            check_new_account();
+            $(this).blur();
+        });
+        $('#steam-id').keyup(clear_error);
+        $('#account-table tbody').on('click', '.remove-account', function() {
+            var $parent_row = $(this).closest('tr');
+            var index = $parent_row.index();
+            remove_account(index);
+            draw_table();
+        });
+        $('.add-account input').keypress(function(e) {
+            var key = e.which;
+            if (key ==13) {
+                $('#add-account').click();
+            }
+        });
+        $('#update-ranks').click(function() {
+                
+        });
+        
+        //functions        
         function check_new_account() {
             clear_error();
             if (!has_required_field()) {
+                $('#steam-id').focus();
                 return;
             }
             
-            $('#add-account').prop('disabled', true);
+            start_loading_animation($('#add-account'));
             
             var steam_id = $('#steam-id').val();
             
             //check if account is already in list
             if (is_in_account_data(steam_id)) {
                 clear_fields();
+                stop_loading_animation($('#add-account'));
                 return;
             }
 
@@ -114,16 +162,16 @@
                 if (data === 'false') {
                     $('.invalid-steam-id').show();
                     $('#steam-id').addClass('is-invalid');
-                    $('#add-account').prop('disabled', false);
+                    stop_loading_animation($('#add-account'));
                     return;
                 }
                 
                 add_account(steam_id, data);
                 clear_fields();
-                $('#add-account').prop('disabled', false);
+                stop_loading_animation($('#add-account'));
             }, function(data) {
                 $('.bad-things').show();
-                $('#add-account').prop('disabled', false);
+                stop_loading_animation($('#add-account'));
             });
         }
         function add_account(steam_id, display_name) {
@@ -140,10 +188,10 @@
                 standard: ''
             };
 
-            //update_cookie();
-            populate_table();
+            update_cookie();
+            draw_table();
         }
-        function populate_table() {
+        function draw_table() {
             var object_count = Object.keys(account_data).length;
             
             $('#account-table tbody').html('');
@@ -155,7 +203,7 @@
                 html += "<td>"+ account_data[i]['doubles'] +"</td>";
                 html += "<td>"+ account_data[i]['solo_standard'] +"</td>";
                 html += "<td>"+ account_data[i]['standard'] +"</td>";
-                html += "<td><button type='button' class='btn btn-default btn-sm'><span class='fa fa-remove remove-account' aria-hidden='true'></span></button></td></tr>";
+                html += "<td><button type='button' class='btn btn-default btn-sm remove-account'><span class='fa fa-remove' aria-hidden='true'></span></button></td></tr>";
                 $('#account-table tbody').append(html);
             }
         }
@@ -191,18 +239,41 @@
             }
             return true;
         }
+        function start_loading_animation($this) {
+            var loading_text = '<i class="fa fa-circle-o-notch fa-spin"></i> Loading';
+            
+            $this.prop('disabled', true);
+           
+            if ($this.html() !== loading_text) {
+                $this.data('original-text', $this.html());
+                $this.html(loading_text);
+            }
+        }
+        function stop_loading_animation($this) {
+            $this.prop('disabled', false);
+            $this.html($this.data('original-text'));
+            if ($this.attr('id') == 'add-account') {
+                $('#steam-id').focus();
+            }
+        }
         function clear_error() {
             $('.invalid-feedback').hide();
             $('#steam-id').removeClass('is-invalid');
         }
-        $('#add-account').click(check_new_account);
-        $('#steam-id').keyup(clear_error);
-        $('.add-account input').keypress(function(e) {
-            var key = e.which;
-            if (key ==13) {
-                $('#add-account').click();
-            }
-        });
+        function remove_account(index) {
+            delete account_data[index];
+            
+            var temp = {};
+            var i = 0;
+            $.each(account_data, function(key, value) {
+                temp[i] = value;
+                i++;
+            });
+            
+            account_data = temp;
+            update_cookie();
+        }
+
     </script>
   </body>
 </html>
