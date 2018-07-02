@@ -11,11 +11,12 @@ if ($_POST['method'] == 'get_display_name') {
 //functions
 function get_display_name($id, $api_key) {
     $curl = curl_init();
-    $url = "https://api.rocketleaguestats.com/v1/player?unique_id=". $id ."&platform_id=1&apikey=". $api_key;
+    $url = "https://api.rocketleaguestats.com/v1/player?unique_id=". $id ."&platform_id=1";
 
     curl_setopt_array($curl, array(
         CURLOPT_RETURNTRANSFER => 1,
-        CURLOPT_URL => $url
+        CURLOPT_URL => $url,
+        CURLOPT_HTTPHEADER => array("Authorization: ". $api_key)
     ));
 
     $response = json_decode(curl_exec($curl),true);
