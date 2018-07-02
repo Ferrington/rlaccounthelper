@@ -141,11 +141,16 @@
         
         //functions        
         function update_ranks() {
+            $.post('ajax/rlaccounthelper.php', {account_data: account_data, method: 'get_rank_info'}).then(function(data) {
+                console.log(data);
+            }, function(data) {
+                console.log(data);
+            });
             //
         }
         function check_new_account() {
             clear_error();
-            if (missing_required_field() or has_too_many_accounts()) {
+            if (missing_required_field() || has_too_many_accounts()) {
                 $('#steam-id').focus();
                 return;
             }
@@ -186,10 +191,26 @@
                 steam_id: steam_id, 
                 account_name: account_name, 
                 display_name: display_name,
-                solo_duel: '',
-                doubles: '',
-                solo_standard: '',
-                standard: ''
+                solo_duel: {
+                    mmr: '',
+                    tier: '',
+                    division: ''
+                },
+                doubles: {
+                    mmr: '',
+                    tier: '',
+                    division: ''
+                },
+                solo_standard: {
+                    mmr: '',
+                    tier: '',
+                    division: ''
+                },
+                standard: {
+                    mmr: '',
+                    tier: '',
+                    division: ''
+                },
             };
 
             update_cookie();
@@ -203,10 +224,10 @@
                 let html = "<tr><td>"+ account_data[i]['steam_id'] +"</td>";
                 html += "<td>"+ account_data[i]['account_name'] +"</td>";
                 html += "<td>"+ account_data[i]['display_name'] +"</td>";
-                html += "<td>"+ account_data[i]['solo_duel'] +"</td>";
-                html += "<td>"+ account_data[i]['doubles'] +"</td>";
-                html += "<td>"+ account_data[i]['solo_standard'] +"</td>";
-                html += "<td>"+ account_data[i]['standard'] +"</td>";
+                html += "<td>"+ account_data[i]['solo_duel']['mmr'] +"</td>";
+                html += "<td>"+ account_data[i]['doubles']['mmr'] +"</td>";
+                html += "<td>"+ account_data[i]['solo_standard']['mmr'] +"</td>";
+                html += "<td>"+ account_data[i]['standard']['mmr'] +"</td>";
                 html += "<td><button type='button' class='btn btn-default btn-sm remove-account'><span class='fa fa-remove' aria-hidden='true'></span></button></td></tr>";
                 $('#account-table tbody').append(html);
             }
