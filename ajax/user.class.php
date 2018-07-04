@@ -4,14 +4,14 @@ $api_key = include('api_key.php');
 $config = include('config.php');
 
 class User {
-    private const SEASON = 8;
-	private const GAME_MODES = [
+    const SEASON = 8;
+	const GAME_MODES = [
 		10 => '1_', 
 		11 => '2_', 
 		12 => '3s_', 
 		13 => '3_'
 	];
-    private const DATA_CATEGORIES = [
+    const DATA_CATEGORIES = [
 		'rankPoints' => 'mmr',
 		'tier' => 'tier',
 		'division' => 'division'
@@ -30,6 +30,7 @@ class User {
     }
     
     
+	
     //public methods
     public function get_user_id() 
     {
@@ -55,7 +56,9 @@ class User {
             return "account exists";
         }
         
-        $account_info = $this->get_single_account_info($steam_id);
+        if (!$account_info = $this->get_single_account_info($steam_id)) {
+			return "invalid steam id";
+		};
         $account_info['guid'] = $safe_user_id;
         $account_info['steam_id'] = $steam_id;
         $account_info['account_name'] = $account_name;
@@ -103,6 +106,7 @@ class User {
 	}
     
     
+	
     //private methods
 	private function get_all_steam_ids() 
 	{
