@@ -5,20 +5,28 @@ $config = include('config.php');
 
 class User {
     private const SEASON = 8;
+	private const GAME_MODES = [
+		10 => '1_', 
+		11 => '2_', 
+		12 => '3s_', 
+		13 => '3_'
+	];
+    private const DATA_CATEGORIES = [
+		'rankPoints' => 'mmr',
+		'tier' => 'tier',
+		'division' => 'division'
+	];
     private $api_key;
     private $db;
     private $user_id;
-    private $user_data;
-    
+
+
     public function __construct($user_id, $config, $api_key) 
     {
         $this->user_id = $user_id ?: $this->generate_user_id();
         $this->api_key = $api_key;
-        
-        if ($user_id) {
-            $this->db = new PDO("mysql:host=".$config['host'].";dbname=".$config['db'].";charset=".$config['charset'], $config['user'], $config['pass']);
-            $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);        
-        }
+		$this->db = new PDO("mysql:host=".$config['host'].";dbname=".$config['db'].";charset=".$config['charset'], $config['user'], $config['pass']);
+		$this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);        
     }
     
     
@@ -27,9 +35,19 @@ class User {
     {
         return $this->user_id;
     }
+		
+	public function get_all_accounts() 
+	{
+		$stmt = $this->db->prepare("SELECT steam_id, account_name, display_name, _1_mmr, _1_tier, _1_division, _2_mmr, _2_tier, _2_division, _3s_mmr, _3s_tier, _3s_division, _3_mmr, _3_tier, _3_division FROM users WHERE guid LIKE ?");
+		$stmt->execute([$this->user_id]);
+		
+		return $stmt->fetchALL(PDO::FETCH_ASSOC);
+	}	
     
     public function add_account($steam_id, $account_name) 
     {
+		$steam_id = filter_var($steam_id, FILTER_SANITIZE_STRING);
+		$account_name = filter_var($account_name, FILTER_SANITIZE_STRING);		
         if ($this->get_number_of_accounts() >= 20) {
             return "too many accounts";
         } elseif ($this->account_exists($steam_id)) {
@@ -42,7 +60,7 @@ class User {
         $account_info['account_name'] = $account_name;
         
              
-        $stmt = $this->db->prepare("INSERT INTO users (guid, steam_id, account_name, display_name, 1_mmr, 1_tier, 1_division, 2_mmr, 2_tier, 2_division, 3s_mmr, 3s_tier, 3s_division, 3_mmr, 3_tier, 3_division) 
+        $stmt = $this->db->prepare("INSERT INTO users (guid, steam_id, account_name, display_name, _1_mmr, _1_tier, _1_division, _2_mmr, _2_tier, _2_division, _3s_mmr, _3s_tier, _3s_division, _3_mmr, _3_tier, _3_division) 
                                     VALUES (:guid, :steam_id, :account_name, :display_name, :1_mmr, :1_tier, :1_division, :2_mmr, :2_tier, :2_division, :3s_mmr, :3s_tier, :3s_division, :3_mmr, :3_tier, :3_division)");
         if ($stmt->execute($account_info)) {
             return "success";
@@ -50,6 +68,21 @@ class User {
             return "failure";
         }
     }
+	
+	public function update_all_accounts() 
+	{
+		
+	}
+
+	public function delete_account($steam_id) 
+	{
+		$stmt = $this->db->prepare("DELETE FROM users WHERE guid LIKE ? AND steam_id LIKE ?");
+		if ($stmt->execute([$this->user_id, $steam_id])) {
+			return "success";
+		} else {
+			return "failure";
+		}
+	}
     
     
     //private methods
@@ -70,24 +103,10 @@ class User {
         
         return $count;
     }
-    
-    private function generate_user_id() 
-    {
-        return $this->guidv4(openssl_random_pseudo_bytes(16));
-    }
-    
-    private function get_single_account_info($steam_id) {
-        $game_modes = array(
-            10 => '1_', 
-            11 => '2_', 
-            12 => '3s_', 
-            13 => '3_'
-        );
-        $data_categories = array(
-            'rankPoints' => 'mmr',
-            'tier' => 'tier',
-            'division' => 'division'
-        );
+
+    private function get_single_account_info($steam_id) 
+	{
+
         $curl = curl_init();
         $url = "https://api.rocketleaguestats.com/v1/player?unique_id=". $steam_id ."&platform_id=1";
 
@@ -100,9 +119,15 @@ class User {
         $response = json_decode(curl_exec($curl),true);
 
         if (isset($response['displayName'])) {
-            foreach ($game_modes as $mode_number => $game_mode) {
-                foreach ($data_categories as $theirs => $mine) {
-                    $account_data[$game_mode.$mine] = $response['rankedSeasons'][self::SEASON][$mode_number][$theirs];
+            foreach (self::GAME_MODES as $mode_number => $game_mode) {
+				if (!isset($response['rankedSeasons'][self::SEASON][$mode_number])) {
+					foreach (self::DATA_CATEGORIES as $theirs => $mine) {
+						$account_data[$game_mode.$mine] = 0;
+					}
+					continue;
+				}
+                foreach (self::DATA_CATEGORIES as $theirs => $mine) {
+                    $account_data[$game_mode.$mine] = $response['rankedSeasons'][self::SEASON][$mode_number][$theirs] ?? 0;
                 }
             }
             $account_data['display_name'] = $response['displayName'];
@@ -112,6 +137,12 @@ class User {
         }
     }
   
+    private function generate_user_id() 
+    {
+		die($this->guidv4(openssl_random_pseudo_bytes(16)));
+        return $this->guidv4(openssl_random_pseudo_bytes(16));
+    }
+    
     private function guidv4($data) 
     {
         assert(strlen($data) == 16);
@@ -139,20 +170,38 @@ if (isset($_POST['user_id'])) {
 }
 
 if ($_POST['method'] == 'add_account') {
-
+	
     if (isset($_POST['steam_id']) and isset($_POST['account_name'])) {
         $steam_id = $_POST['steam_id'];
         $account_name = $_POST['account_name']; 
-    }
+    } else {
+		die();
+	}
 
-    
-    $user = new User($user_id, $config, $api_key);
-    
-    print_r($user->add_account($steam_id, $account_name));
-
+    $user = new User($user_id, $config, $api_key);   
+    echo $user->add_account($steam_id, $account_name);
+	
+} elseif ($_POST['method'] == 'update_ranks') {	
 } elseif ($_POST['method'] == 'generate_user_id') {
+	
     $user = new User('', $config, $api_key);
     echo $user->get_user_id();
+	
+} elseif ($_POST['method'] == 'get_all_accounts') {
+	
+	$user = new User($user_id, $config, $api_key);
+    echo json_encode($user->get_all_accounts());
+	
+} elseif ($_POST['method'] == 'delete_account') {
+	if (isset($_POST['steam_id'])) {
+		$steam_id = $_POST['steam_id'];
+	} else {
+		die();
+	}
+	
+	$user = new User($user_id, $config, $api_key);
+    echo $user->delete_account($steam_id);
+	
 }
 
 //functions

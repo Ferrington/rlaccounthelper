@@ -122,7 +122,6 @@
         //on load events
         $(function() {
             load_user_id();
-            draw_table();
         });
         
         //triggers
@@ -132,10 +131,8 @@
         });
         $('#steam-id').keyup(clear_error);
         $('#account-table tbody').on('click', '.remove-account', function() {
-            var $parent_row = $(this).closest('tr');
-            var index = $parent_row.index();
-            remove_account(index);
-            draw_table();
+            var steam_id = $(this).closest('tr').find('td').eq(0).text();
+            remove_account(steam_id);
         });
         $('.add-account input').keypress(function(e) {
             var key = e.which;
@@ -148,13 +145,13 @@
         //functions        
         function update_ranks() {
             start_loading_animation($('#update-ranks'));
-            $.post('ajax/rlaccounthelper.php', {account_data: account_data, method: 'get_rank_info'}).then(function(data) {
+            $.post('ajax/user.class.php', {user_id: user_id, method: 'update_ranks'}).then(function(data) {
                 console.log(data);
                 //account_data = JSON.parse(data);
                 //draw_table();
                 stop_loading_animation($('#update-ranks'));
             }, function(data) {
-                console.log(data);
+                //error
                 stop_loading_animation($('#update-ranks'));
             });
             //
@@ -172,79 +169,49 @@
             var account_name = $('#account-name').val();
          
             //attempt to add account
-            $.post('ajax/rlaccounthelper.php', {user_id: user_id, steam_id: steam_id, account_name: account_name, method: 'add_account'}).then(function(data) {
-                if (data ==='too many accounts') {
-                    $('.too-many-accounts').show();
-                    $('#steam-id').addClass('is-invalid');
-                    stop_loading_animation($('#add-account'));
-                    return;
-                } else if (data == 'invalid steam id') {
-                    $('.invalid-steam-id').show();
-                    $('#steam-id').addClass('is-invalid');
-                    stop_loading_animation($('#add-account'));
-                    return;
-                } else if (data == 'account exists') {
-                    $('.account-exists').show();
-                    $('#steam-id').addClass('is-invalid');
-                    stop_loading_animation($('#add-account'));
-                    return;
-                }
-                console.log(data);
-               // clear_fields();
-                stop_loading_animation($('#add-account'));
+            $.post('ajax/user.class.php', {user_id: user_id, steam_id: steam_id, account_name: account_name, method: 'add_account'}).then(function(data) {
+				add_account_return_action(data);
             }, function(data) {
                 $('.bad-things').show();
                 stop_loading_animation($('#add-account'));
             });
         }
-        function dummy(steam_id, display_name) {
-            var account_name = $('#account-name').val();            
-            var object_count = Object.keys(account_data).length;
-            
-            account_data[object_count] = {
-                steam_id: steam_id, 
-                account_name: account_name, 
-                display_name: display_name,
-                solo_duel: {
-                    mmr: '',
-                    tier: '',
-                    division: ''
-                },
-                doubles: {
-                    mmr: '',
-                    tier: '',
-                    division: ''
-                },
-                solo_standard: {
-                    mmr: '',
-                    tier: '',
-                    division: ''
-                },
-                standard: {
-                    mmr: '',
-                    tier: '',
-                    division: ''
-                },
-            };
-
-            update_cookie();
-            draw_table();
-        }
+		function add_account_return_action(data) {
+			if (data == 'success') {
+				clear_fields();
+				draw_table();
+			} else if (data =='too many accounts') {
+				$('.too-many-accounts').show();
+				$('#steam-id').addClass('is-invalid');
+			} else if (data == 'invalid steam id') {
+				$('.invalid-steam-id').show();
+				$('#steam-id').addClass('is-invalid');
+			} else if (data == 'account exists') {
+				$('.account-exists').show();
+				$('#steam-id').addClass('is-invalid');
+			} else {
+				$('.bad-things').show();
+			}
+			stop_loading_animation($('#add-account'));		
+		}
         function draw_table() {
-            var object_count = Object.keys(account_data).length;
-            
-            $('#account-table tbody').html('');
-            for (let i=0; i < object_count; i++) {
-                let html = "<tr><td>"+ account_data[i]['steam_id'] +"</td>";
-                html += "<td>"+ account_data[i]['account_name'] +"</td>";
-                html += "<td>"+ account_data[i]['display_name'] +"</td>";
-                html += "<td>"+ account_data[i]['solo_duel']['mmr'] +"</td>";
-                html += "<td>"+ account_data[i]['doubles']['mmr'] +"</td>";
-                html += "<td>"+ account_data[i]['solo_standard']['mmr'] +"</td>";
-                html += "<td>"+ account_data[i]['standard']['mmr'] +"</td>";
-                html += "<td><button type='button' class='btn btn-default btn-sm remove-account'><span class='fa fa-remove' aria-hidden='true'></span></button></td></tr>";
-                $('#account-table tbody').append(html);
-            }
+			$.post('ajax/user.class.php', {user_id: user_id, method: 'get_all_accounts'}, function(data) {
+				var account_data = JSON.parse(data);
+				
+				$('#account-table tbody').html('');
+				
+				$.each(account_data, function(key, row) {
+					let html = "<tr><td>"+ row.steam_id +"</td>";
+					html += "<td>"+ row.account_name +"</td>";
+					html += "<td>"+ row.display_name +"</td>";
+					html += "<td>"+ (parseInt(row._1_mmr) || '') +"</td>";
+					html += "<td>"+ (parseInt(row._2_mmr) || '') +"</td>";
+					html += "<td>"+ (parseInt(row._3s_mmr) || '') +"</td>";
+					html += "<td>"+ (parseInt(row._3_mmr) || '') +"</td>";
+					html += "<td><button type='button' class='btn btn-default btn-sm remove-account'><span class='fa fa-remove' aria-hidden='true'></span></button></td></tr>";				
+					$('#account-table tbody').append(html);
+				});
+			});
         }
         function clear_fields() {
             $('.add-account input').val('');
@@ -252,12 +219,13 @@
         function load_user_id() {
             var cookie = Cookies.getJSON('rlaccounthelper');
             if (cookie === undefined) {
-                $.post('ajax/rlaccounthelper.php', {method: 'generate_user_id'}, function(user_id) {
+                $.post('ajax/user.class.php', {user_id: '', method: 'generate_user_id'}, function(user_id) {
                     Cookies.set('rlaccounthelper', user_id, {expires: 365});
                     load_user_id();
                 });
             } else {
                 user_id = cookie;
+				draw_table();
             }
         }
         function missing_required_field() {
@@ -267,24 +235,6 @@
                 return true;
             }
             return false;
-        }
-         function has_too_many_accounts() {
-            var count = 20;
-            $.ajax({
-                type: "POST",
-                url: 'ajax/rlaccounthelper.php',
-                sync: false,
-                data: {user_id: user_id, method: 'get_number_of_accounts'},
-                success: function(data) {
-                    count = 15;
-                }
-            });
-            console.log(count);
-            if (count >= 20) {
-                return true;
-            } else {
-                return false;
-            }
         }
         function start_loading_animation($this) {
             var loading_text = '<i class="fa fa-circle-o-notch fa-spin"></i> Loading';
@@ -307,18 +257,14 @@
             $('.invalid-feedback').hide();
             $('#steam-id').removeClass('is-invalid');
         }
-        function remove_account(index) {
-            delete account_data[index];
-            
-            var temp = {};
-            var i = 0;
-            $.each(account_data, function(key, value) {
-                temp[i] = value;
-                i++;
-            });
-            
-            account_data = temp;
-            update_cookie();
+        function remove_account(steam_id) {
+			$.post('ajax/user.class.php', {user_id: user_id, steam_id: steam_id, method: 'delete_account'}, function(data) {
+				if (data == 'success') {
+					draw_table();
+				} else {
+					$('.bad-things').show(); //replace this with another error text
+				}
+			});
         }
 
     </script>
