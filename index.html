@@ -146,9 +146,7 @@
         function update_ranks() {
             start_loading_animation($('#update-ranks'));
             $.post('ajax/user.class.php', {user_id: user_id, method: 'update_ranks'}).then(function(data) {
-                console.log(data);
-                //account_data = JSON.parse(data);
-                //draw_table();
+                draw_table();
                 stop_loading_animation($('#update-ranks'));
             }, function(data) {
                 //error
@@ -197,6 +195,7 @@
         function draw_table() {
 			$.post('ajax/user.class.php', {user_id: user_id, method: 'get_all_accounts'}, function(data) {
 				var account_data = JSON.parse(data);
+				account_data.sort(sort_by_steam_id);
 				
 				$('#account-table tbody').html('');
 				
@@ -266,6 +265,11 @@
 				}
 			});
         }
+		function sort_by_steam_id(a, b){
+		    var a = a.steam_id.toLowerCase();
+		    var b = b.steam_id.toLowerCase(); 
+		    return ((a < b) ? -1 : ((a > b) ? 1 : 0));
+		}
 
     </script>
   </body>

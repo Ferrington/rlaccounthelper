@@ -46,6 +46,7 @@ class User {
     
     public function add_account($steam_id, $account_name) 
     {
+		$safe_user_id = filter_var($this->user_id, FILTER_SANITIZE_STRING);
 		$steam_id = filter_var($steam_id, FILTER_SANITIZE_STRING);
 		$account_name = filter_var($account_name, FILTER_SANITIZE_STRING);		
         if ($this->get_number_of_accounts() >= 20) {
@@ -55,7 +56,7 @@ class User {
         }
         
         $account_info = $this->get_single_account_info($steam_id);
-        $account_info['guid'] = $this->user_id;
+        $account_info['guid'] = $safe_user_id;
         $account_info['steam_id'] = $steam_id;
         $account_info['account_name'] = $account_name;
         
@@ -71,7 +72,24 @@ class User {
 	
 	public function update_all_accounts() 
 	{
+		$steam_ids = $this->get_all_steam_ids();
 		
+		$account_info = $this->get_batch_rank_info($steam_ids);
+		
+		$stmt = $this->db->prepare("UPDATE users SET 
+										_1_mmr = :1_mmr, _1_tier = :1_tier, _1_division = :1_division, 
+										_2_mmr = :2_mmr, _2_tier = :2_tier, _2_division = :2_division, 
+										_3s_mmr = :3s_mmr, _3s_tier = :3s_tier, _3s_division = :3s_division, 
+										_3_mmr = :3_mmr, _3_tier = :3_tier, _3_division = :3_division
+									WHERE guid = :guid AND steam_id = :steam_id");
+									
+		foreach ($account_info as $steam_id => $account) {
+			$update_arr = $account;
+			$update_arr['steam_id'] = $steam_id;
+			$update_arr['guid'] = $this->user_id;
+			
+			$stmt->execute($update_arr);
+		}
 	}
 
 	public function delete_account($steam_id) 
@@ -86,6 +104,14 @@ class User {
     
     
     //private methods
+	private function get_all_steam_ids() 
+	{
+		$stmt = $this->db->prepare("SELECT steam_id FROM users WHERE guid LIKE ?");
+		$stmt->execute([$this->user_id]);
+		
+		return $stmt->fetchALL(PDO::FETCH_COLUMN);	
+	}
+	
     private function account_exists($steam_id)
     {
         $stmt = $this->db->prepare("SELECT count(*) FROM users WHERE guid LIKE ? AND steam_id LIKE ?");
@@ -136,10 +162,54 @@ class User {
             return false;
         }
     }
+	
+	private function get_batch_rank_info($steam_ids) 
+	{
+		$payload_arr = [];
+		$batch = $i = 0;
+
+		foreach ($steam_ids as $id) { 
+			$payload_arr[$batch][] = ["platformId" => "1", "uniqueId" => $id];
+			$i++;
+			if ($i == 10) {
+				$batch++;
+				$i = 0;
+			}
+		}
+		
+		foreach ($payload_arr as $batch => $payload) {
+			$curl = curl_init();
+			$url = "https://api.rocketleaguestats.com/v1/player/batch";
+			curl_setopt_array($curl, array(
+				CURLOPT_RETURNTRANSFER => 1,
+				CURLOPT_URL => $url,
+				CURLOPT_HTTPHEADER => array("Authorization: ". $this->api_key, 'Content-Type:application/json'),
+				CURLOPT_POSTFIELDS => json_encode($payload)
+			));
+			
+			$response = json_decode(curl_exec($curl),true);
+		
+			foreach ($response as $i => $player) {
+				$account_index = $batch * 10 + $i;
+				foreach (self::GAME_MODES as $mode_number => $game_mode) {
+					if (!isset($player['rankedSeasons'][self::SEASON][$mode_number])) {
+						foreach (self::DATA_CATEGORIES as $theirs => $mine) {
+							$account_data[$steam_ids[$account_index]][$game_mode.$mine] = 0;
+						}
+						continue;
+					}
+					foreach (self::DATA_CATEGORIES as $theirs => $mine) {
+						$account_data[$steam_ids[$account_index]][$game_mode.$mine] = $player['rankedSeasons'][self::SEASON][$mode_number][$theirs];
+					}
+				}
+			}
+		}
+		
+		return $account_data;
+	}
   
     private function generate_user_id() 
     {
-		die($this->guidv4(openssl_random_pseudo_bytes(16)));
         return $this->guidv4(openssl_random_pseudo_bytes(16));
     }
     
@@ -153,11 +223,7 @@ class User {
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));    
     }
 }
-/*
-$user = new User('abcd', $config, $api_key);
-echo $user->get_number_of_accounts();
-die();
-*/
+
 
 //logic
 if (!isset($_POST['method'])) {
@@ -182,6 +248,10 @@ if ($_POST['method'] == 'add_account') {
     echo $user->add_account($steam_id, $account_name);
 	
 } elseif ($_POST['method'] == 'update_ranks') {	
+
+	$user = new User($user_id, $config, $api_key);   
+    echo $user->update_all_accounts();
+	
 } elseif ($_POST['method'] == 'generate_user_id') {
 	
     $user = new User('', $config, $api_key);
@@ -202,54 +272,4 @@ if ($_POST['method'] == 'add_account') {
 	$user = new User($user_id, $config, $api_key);
     echo $user->delete_account($steam_id);
 	
-}
-
-//functions
-
-function get_batch_rank_info($account_data, $api_key) {
-    $payload_arr = array();
-    $batch = $i = 0;
-    $game_modes = array(
-        10 => 'solo_duel', 
-        11 => 'doubles', 
-        12 => 'solo_standard', 
-        13 => 'standard'
-    );
-
-    foreach ($account_data as $key => $value) { 
-        $payload_arr[$batch][] = array("platformId" => "1", "uniqueId" => $value['steam_id']);
-        $i++;
-        if ($i == 10) {
-            $batch++;
-            $i = 0;
-        }
-    }
-    
-    foreach ($payload_arr as $batch => $payload) {
-        $curl = curl_init();
-        $url = "https://api.rocketleaguestats.com/v1/player/batch";
-        curl_setopt_array($curl, array(
-            CURLOPT_RETURNTRANSFER => 1,
-            CURLOPT_URL => $url,
-            CURLOPT_HTTPHEADER => array("Authorization: ". $api_key, 'Content-Type:application/json'),
-            CURLOPT_POSTFIELDS => json_encode($payload)
-        ));
-        
-        $response = json_decode(curl_exec($curl),true);
-    
-        print_r($account_data);
-        die();
-        foreach ($response as $i => $player) {
-            $account_index = $batch * 10 + $i;
-            die($account_index);
-            foreach ($game_modes as $mode_number => $game_mode) {
-                $account_data[$account_index][$game_mode]['mmr'] = $player['rankedSeasons'][SEASON][$mode_number]['rankPoints'];
-                $account_data[$account_index][$game_mode]['tier'] = $player['rankedSeasons'][SEASON][$mode_number]['tier'];
-                $account_data[$account_index][$game_mode]['division'] = $player['rankedSeasons'][SEASON][$mode_number]['division'];
-            }
-            
-        }
-    }
-    
-    return json_encode($account_data);
 }
