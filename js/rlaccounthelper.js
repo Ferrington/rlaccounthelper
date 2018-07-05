@@ -84,17 +84,56 @@ function draw_table() {
 		$('#account-table tbody').html('');
 		
 		$.each(account_data, function(key, row) {
-			let html = "<tr><td>"+ row.steam_id +"</td>";
-			html += "<td>"+ row.account_name +"</td>";
-			html += "<td>"+ row.display_name +"</td>";
-			html += "<td>"+ (parseInt(row._1_mmr) || '') +"</td>";
-			html += "<td>"+ (parseInt(row._2_mmr) || '') +"</td>";
-			html += "<td>"+ (parseInt(row._3s_mmr) || '') +"</td>";
-			html += "<td>"+ (parseInt(row._3_mmr) || '') +"</td>";
-			html += "<td><button type='button' class='btn btn-default btn-sm remove-account'><span class='fa fa-remove' aria-hidden='true'></span></button></td></tr>";				
+			let html = "<tr><td class='long-word'>"+ row.steam_id +"</td>";
+			html += "<td class='long-word'>"+ row.account_name +"</td>";
+			html += "<td class='long-word'>"+ row.display_name +"</td>";
+			html += "<td class='rank-td'>"+ format_ranks("_1_", row) + "</td>";
+			html += "<td class='rank-td'>"+ format_ranks("_2_", row) + "</td>";
+			html += "<td class='rank-td'>"+ format_ranks("_3s_", row) + "</td>";
+			html += "<td class='rank-td'>"+ format_ranks("_3_", row) + "</td>";
+			html += "<td><button type='button' class='btn btn-default btn-sm remove-account'><span class='fas fa-times' aria-hidden='true'></span></button></td></tr>";				
 			$('#account-table tbody').append(html);
 		});
 	});
+}
+function format_ranks(playlist, row) {
+	var rank_images = {
+		0: "unranked",
+		1: "bronze1",
+		2: "bronze2",
+		3: "bronze3",
+		4: "silver1",
+		5: "silver2",
+		6: "silver3",
+		7: "gold1",
+		8: "gold2",
+		9: "gold3",
+		10: "plat1",
+		11: "plat2",
+		12: "plat3",
+		13: "diamond1",
+		14: "diamond2",
+		15: "diamond3",
+		16: "champ1",
+		17: "champ2",
+		18: "champ3",
+		19: "gc"		
+	}	
+	
+	var mmr = parseInt(row[playlist + "mmr"]) || "&nbsp;";
+	if (mmr < 1000) {
+		mmr = "&nbsp;&nbsp;" + mmr;
+	}
+	if (row[playlist + "tier"] == 0) {
+		var division = "&nbsp;";
+	} else {
+		var division = "Div. " + (1 + parseInt(row[playlist + "division"]));
+	}
+	
+	var output = "<div class='rank-image-div'><img src='imgs/"+ rank_images[row[playlist + "tier"]] + ".png' class='img-fluid' alt='rank-image'></div>";
+	output += "<div class='rank-span-div'><span class='td-mmr'>"+ mmr +"</span><span class='td-division'>"+ division +"</span></div>"
+	return output;
+	
 }
 function clear_fields() {
 	$('.add-account input').val('');

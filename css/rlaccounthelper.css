@@ -4,6 +4,9 @@ html {
 }
 body {
   margin-bottom: 200px; /* Margin bottom by footer height */
+  background-color: #0b0c10; 
+  color: #C5C6C7;
+  font-family: 'Roboto', sans-serif;
 }
 .rls-container {
   position: absolute;
@@ -23,12 +26,89 @@ body {
 h1 {
 	text-align:center;
 	margin: 25px;
+	color: #66FCF1;
+	font-weight: bold;
+	font-size: 60px;
 }
 label {
 	white-space: nowrap;
 }
 .account-table-container {
 	margin:20px auto;
-	max-width:1024px;
+	max-width:1200px;
 	overflow:auto;
+}
+.td-mmr {
+	display:block;
+}
+.td-division {
+	display:block;
+	font-size: 12px;
+}
+.rank-image-div {
+	vertical-align:middle;
+	display:inline-block;
+	width:40px;
+	height:40px;
+}
+.rank-span-div {
+	vertical-align:middle;
+	display:inline-block;
+	text-align:center;
+	width:40px;
+	height:40px;
+}
+.rank-th {
+	text-align:center;
+}
+.rank-td {
+	text-align:center;
+}
+.w-m {
+	width: 13%;
+}
+.w-s {
+	width: 5%;
+}
+.long-word {
+	word-wrap: break-word;
+	word-break: break-all;
+}
+.account-table-container thead th {
+	background-color:#1F2833 !important;
+	border-color: #45A29E !important;
+	color:#C5C6C7 !important;
+}
+.account-table-container tbody td {
+	border-color: #45A29E !important;
+}
+.remove-account {
+	background-color: #0b0c10;
+	border: 1px solid #45A29E;
+}
+.fa-times {
+	color:#C5C6C7;
+}
+#add-account, #update-ranks {
+	background-color: #1F2833;
+	border: 1px solid #45A29E;
+	color:#C5C6C7;
+}
+.form-control {
+	border: 1px solid #45A29E;
+	background-color:#0b0c10;
+	color:#C5C6C7 !important;
+}
+.form-control:focus {
+  border-color: #66FCF1 !important;
+  box-shadow: 0 0 5px 2px rgba(102, 252, 241, 0.8) !important;
+  background-color:#0b0c10;
+  
+}
+.btn:focus,.btn:active {
+   outline: none !important;
+   box-shadow: none;
+}
+.tippy-tooltip {
+	background-color:white;
 }
