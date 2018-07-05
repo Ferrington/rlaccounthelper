@@ -1,0 +1,33 @@
+html {
+  position: relative;
+  min-height: 100%;
+}
+body {
+  margin-bottom: 200px; /* Margin bottom by footer height */
+}
+.rls-container {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 150px; /* Set the fixed height of the footer here */
+  line-height: 150px; /* Vertically center the text there */
+  text-align:center;
+}
+.add-account {
+	margin: 50px auto;
+	max-width:768px;
+}
+.update-button-container {
+	text-align:center;
+}
+h1 {
+	text-align:center;
+	margin: 25px;
+}
+label {
+	white-space: nowrap;
+}
+.account-table-container {
+	margin:20px auto;
+	max-width:1024px;
+}
