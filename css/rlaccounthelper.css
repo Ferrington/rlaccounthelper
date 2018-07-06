@@ -116,3 +116,22 @@ label {
 	width:40px;
 	height:40px;
 }
+
+/* tablesorter */
+table.tablesorter thead tr th.header {
+	background-image: url(../imgs/bg.gif);
+	background-repeat: no-repeat;
+	background-position: center right;
+	cursor: pointer;
+}
+table.tablesorter thead tr th.headerSortUp {
+	background-image: url(../imgs/asc.gif) !important;
+	background-repeat: no-repeat;
+	background-position: center right;
+}
+table.tablesorter thead tr th.headerSortDown {
+	background-image: url(../imgs/desc.gif) !important;
+	background-repeat: no-repeat;
+	background-position: center right;
+}
+

@@ -6,6 +6,15 @@ var ajax_url = "ajax/user.class.php";
 //on load events
 $(function() {
 	load_user_id();
+	tippy('.fa-info-circle', {
+		allowTitleHTML: true
+	})
+	$("#account-table").tablesorter({
+		headers: {
+			0: {sorter: false},
+			8: {sorter: false}
+		}
+	}); 
 });
 
 //triggers
@@ -95,6 +104,8 @@ function draw_table() {
 			html += "<td><button type='button' class='btn btn-default btn-sm remove-account'><span class='fas fa-times' aria-hidden='true'></span></button></td></tr>";				
 			$('#account-table tbody').append(html);
 		});
+		
+		$("#account-table").trigger("update");
 	});
 }
 function format_ranks(playlist, row) {
