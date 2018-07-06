@@ -112,3 +112,7 @@ label {
 .tippy-tooltip {
 	background-color:white;
 }
+.avatar-container {
+	width:40px;
+	height:40px;
+}

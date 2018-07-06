@@ -15,7 +15,7 @@ $('#add-account').click(function() {
 });
 $('#steam-id').keyup(clear_error);
 $('#account-table tbody').on('click', '.remove-account', function() {
-	var steam_id = $(this).closest('tr').find('td').eq(0).text();
+	var steam_id = $(this).closest('tr').find('td').eq(1).text();
 	remove_account(steam_id);
 });
 $('.add-account input').keypress(function(e) {
@@ -84,7 +84,8 @@ function draw_table() {
 		$('#account-table tbody').html('');
 		
 		$.each(account_data, function(key, row) {
-			let html = "<tr><td class='long-word'>"+ row.steam_id +"</td>";
+			let html = "<tr><td><div class='avatar-container'><img src='"+ row.avatar +"' class='img-fluid' alt='steam avatar'></div></td>";
+			html += "<td class='long-word'>"+ row.steam_id +"</td>";
 			html += "<td class='long-word'>"+ row.account_name +"</td>";
 			html += "<td class='long-word'>"+ row.display_name +"</td>";
 			html += "<td class='rank-td'>"+ format_ranks("_1_", row) + "</td>";
@@ -130,7 +131,7 @@ function format_ranks(playlist, row) {
 		var division = "Div. " + (1 + parseInt(row[playlist + "division"]));
 	}
 	
-	var output = "<div class='rank-image-div'><img src='imgs/"+ rank_images[row[playlist + "tier"]] + ".png' class='img-fluid' alt='rank-image'></div>";
+	var output = "<div class='rank-image-div'><img src='imgs/"+ rank_images[row[playlist + "tier"]] + ".png' class='img-fluid' alt='rank image'></div>";
 	output += "<div class='rank-span-div'><span class='td-mmr'>"+ mmr +"</span><span class='td-division'>"+ division +"</span></div>"
 	return output;
 	

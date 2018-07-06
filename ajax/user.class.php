@@ -39,7 +39,7 @@ class User {
 		
 	public function get_all_accounts() 
 	{
-		$stmt = $this->db->prepare("SELECT steam_id, account_name, display_name, _1_mmr, _1_tier, _1_division, _2_mmr, _2_tier, _2_division, _3s_mmr, _3s_tier, _3s_division, _3_mmr, _3_tier, _3_division FROM users WHERE guid LIKE ?");
+		$stmt = $this->db->prepare("SELECT steam_id, account_name, display_name, avatar, _1_mmr, _1_tier, _1_division, _2_mmr, _2_tier, _2_division, _3s_mmr, _3s_tier, _3s_division, _3_mmr, _3_tier, _3_division FROM users WHERE guid LIKE ?");
 		$stmt->execute([$this->user_id]);
 		
 		return $stmt->fetchALL(PDO::FETCH_ASSOC);
@@ -64,8 +64,8 @@ class User {
         $account_info['account_name'] = $account_name;
         
              
-        $stmt = $this->db->prepare("INSERT INTO users (guid, steam_id, account_name, display_name, _1_mmr, _1_tier, _1_division, _2_mmr, _2_tier, _2_division, _3s_mmr, _3s_tier, _3s_division, _3_mmr, _3_tier, _3_division) 
-                                    VALUES (:guid, :steam_id, :account_name, :display_name, :1_mmr, :1_tier, :1_division, :2_mmr, :2_tier, :2_division, :3s_mmr, :3s_tier, :3s_division, :3_mmr, :3_tier, :3_division)");
+        $stmt = $this->db->prepare("INSERT INTO users (guid, steam_id, account_name, display_name, avatar, _1_mmr, _1_tier, _1_division, _2_mmr, _2_tier, _2_division, _3s_mmr, _3s_tier, _3s_division, _3_mmr, _3_tier, _3_division) 
+                                    VALUES (:guid, :steam_id, :account_name, :display_name, :avatar, :1_mmr, :1_tier, :1_division, :2_mmr, :2_tier, :2_division, :3s_mmr, :3s_tier, :3s_division, :3_mmr, :3_tier, :3_division)");
         if ($stmt->execute($account_info)) {
             return "success";
         } else {
@@ -79,7 +79,8 @@ class User {
 		
 		$account_info = $this->get_batch_rank_info($steam_ids);
 		
-		$stmt = $this->db->prepare("UPDATE users SET 
+		$stmt = $this->db->prepare("UPDATE users SET
+										display_name = :display_name, avatar = :avatar,
 										_1_mmr = :1_mmr, _1_tier = :1_tier, _1_division = :1_division, 
 										_2_mmr = :2_mmr, _2_tier = :2_tier, _2_division = :2_division, 
 										_3s_mmr = :3s_mmr, _3s_tier = :3s_tier, _3s_division = :3s_division, 
@@ -161,6 +162,7 @@ class User {
                 }
             }
             $account_data['display_name'] = $response['displayName'];
+			$account_data['avatar'] = $response['avatar'];
             return $account_data;
         } else {
             return false;
@@ -206,6 +208,8 @@ class User {
 						$account_data[$steam_ids[$account_index]][$game_mode.$mine] = $player['rankedSeasons'][self::SEASON][$mode_number][$theirs];
 					}
 				}
+				$account_data[$steam_ids[$account_index]]['display_name'] = $player['displayName'];
+				$account_data[$steam_ids[$account_index]]['avatar'] = $player['avatar'];
 			}
 		}
 		
