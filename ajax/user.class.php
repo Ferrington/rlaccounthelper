@@ -234,7 +234,9 @@ class User {
 		
 		$sleepy_time = $diff < 1000000 ? 1000000 - $diff : 0;
 		
-		$this->db->query("UPDATE rate_limit SET last_request = SUBSTRING(DATE_ADD(NOW(3), INTERVAL ". $diff ." MICROSECOND),1,23) WHERE id = 1");
+		$sql = "UPDATE rate_limit SET last_request = (SUBSTRING(DATE_ADD(NOW(3), INTERVAL ". $sleepy_time ." MICROSECOND),1,23)) WHERE id = 1";
+		
+		$this->db->query($sql);
 		
 		if ($diff < 1000000) {
 			usleep($sleepy_time);			
