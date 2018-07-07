@@ -39,7 +39,14 @@ class User {
 		$stmt = $this->db->prepare("SELECT steam_id, account_name, display_name, avatar, _1_mmr, _1_tier, _1_division, _2_mmr, _2_tier, _2_division, _3s_mmr, _3s_tier, _3s_division, _3_mmr, _3_tier, _3_division FROM users WHERE guid LIKE ?");
 		$stmt->execute([$this->user_id]);
 		
-		return $stmt->fetchALL(PDO::FETCH_ASSOC);
+		$account_data = $stmt->fetchALL(PDO::FETCH_ASSOC);
+		
+		if (count($account_data) == 0) {
+			$this->user_id = "sample_account";
+			return $this->get_all_accounts();
+		}
+		
+		return $account_data;
 	}	
     
     public function add_account($steam_id, $account_name) 

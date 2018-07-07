@@ -3,7 +3,7 @@ html {
   min-height: 100%;
 }
 body {
-  margin-bottom: 200px; /* Margin bottom by footer height */
+  margin-bottom: 150px; /* Margin bottom by footer height */
   background-color: #0b0c10; 
   color: #C5C6C7;
   font-family: 'Roboto', sans-serif;
@@ -51,7 +51,8 @@ label {
 .account-table-container {
 	max-width:1200px;
 	overflow-x:auto;
-	margin:20px auto;
+	margin:0 auto;
+	margin-top:20px;
 }
 thead th:nth-child(1) {
 	min-width:64px;

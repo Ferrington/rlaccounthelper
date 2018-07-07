@@ -12,7 +12,17 @@ $(function() {
 	$("#account-table").tablesorter({
 		headers: {
 			0: {sorter: false},
+			4: {sorter: "digit"},
+			5: {sorter: "digit"},
+			6: {sorter: "digit"},
+			7: {sorter: "digit"},
 			8: {sorter: false}
+		},
+		textExtraction: {
+			4: function(node, table, cellIndex) { return $(node).find(".td-mmr").text(); },
+			5: function(node, table, cellIndex) { return $(node).find(".td-mmr").text(); },
+			6: function(node, table, cellIndex) { return $(node).find(".td-mmr").text(); },
+			7: function(node, table, cellIndex) { return $(node).find(".td-mmr").text(); }
 		}
 	}); 
 });

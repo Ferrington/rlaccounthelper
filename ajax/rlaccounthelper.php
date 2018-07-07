@@ -9,6 +9,9 @@ if (!isset($_POST['method'])) {
 }
 if (isset($_POST['user_id'])) {
     $user_id = $_POST['user_id'];
+	if ($user_id == 'sample_account') {
+		die();
+	}
 } else {
     die();
 }
