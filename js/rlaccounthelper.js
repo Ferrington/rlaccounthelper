@@ -171,7 +171,7 @@ function missing_required_field() {
 	return false;
 }
 function start_loading_animation($this) {
-	var loading_text = '<i class="fa fa-circle-o-notch fa-spin"></i> Loading';
+	var loading_text = '<i class="fas fa-spinner fa-spin"></i> Loading';
 	
 	$this.prop('disabled', true);
    
