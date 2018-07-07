@@ -80,6 +80,10 @@ class User {
 	public function update_all_accounts() 
 	{
 		$steam_ids = $this->get_all_steam_ids();
+		if (count($steam_ids) == 0) {
+			sleep(1);
+			die();
+		}
 		
 		$account_info = $this->get_batch_rank_info($steam_ids);
 		
@@ -227,10 +231,13 @@ class User {
 	private function check_rate_limit() 
 	{
 		$diff = $this->db->query("SELECT ROUND(TIMESTAMPDIFF(MICROSECOND, last_request, NOW(3))) FROM rate_limit WHERE id = 1")->fetchColumn();
-		$this->db->query("UPDATE rate_limit SET last_request = NOW(3) WHERE id = 1");
+		
+		$sleepy_time = $diff < 1000000 ? 1000000 - $diff : 0;
+		
+		$this->db->query("UPDATE rate_limit SET last_request = DATE_ADD(NOW(3), INTERVAL $diff MICROSECOND) WHERE id = 1");
 		
 		if ($diff < 1000000) {
-			usleep(1000000 - $diff);			
+			usleep($sleepy_time);			
 		}
 	}
   
