@@ -1,7 +1,7 @@
 //set global
 var user_id;
 var account_data = {};
-var ajax_url = "ajax/user.class.php";
+var ajax_url = "ajax/rlaccounthelper.php";
 
 //on load events
 $(function() {

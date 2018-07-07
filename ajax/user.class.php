@@ -1,8 +1,5 @@
 <?php
 
-$api_key = include('api_key.php');
-$config = include('config.php');
-
 class User {
     const SEASON = 8;
 	const GAME_MODES = [
@@ -137,6 +134,7 @@ class User {
 
     private function get_single_account_info($steam_id) 
 	{
+		$this->check_rate_limit();
 
         $curl = curl_init();
         $url = "https://api.rocketleaguestats.com/v1/player?unique_id=". $steam_id ."&platform_id=1";
@@ -171,6 +169,8 @@ class User {
 	
 	private function get_batch_rank_info($steam_ids) 
 	{
+		$this->check_rate_limit();
+		
 		$payload_arr = [];
 		$batch = $i = 0;
 
@@ -215,6 +215,17 @@ class User {
 		
 		return $account_data;
 	}
+	
+	//add delay if request as been made recently
+	private function check_rate_limit() 
+	{
+		$diff = $this->db->query("SELECT ROUND(TIMESTAMPDIFF(MICROSECOND, last_request, NOW(3))) FROM rate_limit WHERE id = 1")->fetchColumn();
+		$this->db->query("UPDATE rate_limit SET last_request = NOW(3) WHERE id = 1");
+		
+		if ($diff < 1000000) {
+			usleep(1000000 - $diff);			
+		}
+	}
   
     private function generate_user_id() 
     {
@@ -230,54 +241,4 @@ class User {
 
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));    
     }
-}
-
-
-//logic
-if (!isset($_POST['method'])) {
-    die();
-}
-if (isset($_POST['user_id'])) {
-    $user_id = $_POST['user_id'];
-} else {
-    die();
-}
-
-if ($_POST['method'] == 'add_account') {
-	
-    if (isset($_POST['steam_id']) and isset($_POST['account_name'])) {
-        $steam_id = $_POST['steam_id'];
-        $account_name = $_POST['account_name']; 
-    } else {
-		die();
-	}
-
-    $user = new User($user_id, $config, $api_key);   
-    echo $user->add_account($steam_id, $account_name);
-	
-} elseif ($_POST['method'] == 'update_ranks') {	
-
-	$user = new User($user_id, $config, $api_key);   
-    echo $user->update_all_accounts();
-	
-} elseif ($_POST['method'] == 'generate_user_id') {
-	
-    $user = new User('', $config, $api_key);
-    echo $user->get_user_id();
-	
-} elseif ($_POST['method'] == 'get_all_accounts') {
-	
-	$user = new User($user_id, $config, $api_key);
-    echo json_encode($user->get_all_accounts());
-	
-} elseif ($_POST['method'] == 'delete_account') {
-	if (isset($_POST['steam_id'])) {
-		$steam_id = $_POST['steam_id'];
-	} else {
-		die();
-	}
-	
-	$user = new User($user_id, $config, $api_key);
-    echo $user->delete_account($steam_id);
-	
 }
