@@ -49,10 +49,20 @@ label {
 	white-space: nowrap;
 }
 .account-table-container {
-	margin:20px auto;
 	max-width:1200px;
-	overflow:auto;
+	overflow-x:auto;
+	margin:20px auto;
 }
+thead th:nth-child(1) {
+	min-width:64px;
+}
+thead th:nth-child(2), thead th:nth-child(3), thead th:nth-child(4) {
+	min-width:135px;
+}
+thead th:nth-child(5), thead th:nth-child(6), thead th:nth-child(7), thead th:nth-child(8) {
+	min-width:125px;
+}
+
 .td-mmr {
 	display:block;
 }
@@ -130,6 +140,9 @@ label {
 .avatar-container {
 	width:40px;
 	height:40px;
+}
+.avatar-td {
+	text-align:center;
 }
 
 /* tablesorter */

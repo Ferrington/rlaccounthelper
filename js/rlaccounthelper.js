@@ -93,7 +93,7 @@ function draw_table() {
 		$('#account-table tbody').html('');
 		
 		$.each(account_data, function(key, row) {
-			let html = "<tr><td><div class='avatar-container'><img src='"+ row.avatar +"' class='img-fluid' alt='steam avatar'></div></td>";
+			let html = "<tr><td class='avatar-td'><div class='avatar-container'><img src='"+ row.avatar +"' class='img-fluid' alt='steam avatar'></div></td>";
 			html += "<td class='long-word'>"+ row.steam_id +"</td>";
 			html += "<td class='long-word'>"+ row.account_name +"</td>";
 			html += "<td class='long-word'>"+ row.display_name +"</td>";
