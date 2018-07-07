@@ -8,24 +8,39 @@ body {
   color: #C5C6C7;
   font-family: 'Roboto', sans-serif;
 }
-.rls-container {
+.footer {
   position: absolute;
   bottom: 0;
   width: 100%;
   height: 150px; /* Set the fixed height of the footer here */
-  line-height: 150px; /* Vertically center the text there */
   text-align:center;
+  padding-top:25px;
+}
+.rls-container {
+	display:inline-block;
+	vertical-align:middle;
+}
+.artist-credit {
+	display:inline-block;
+	vertical-align:middle;
+	margin-left:10px;
+}
+.artist-credit p {
+	margin:0;
 }
 .add-account {
 	margin: 50px auto;
+	margin-top:25px;
 	max-width:768px;
 }
 .update-button-container {
 	text-align:center;
 }
-h1 {
+.header-image {
+	max-width:600px;
 	text-align:center;
-	margin: 25px;
+	margin: 0 auto;
+	margin-top:25px;
 	color: #66FCF1;
 	font-weight: bold;
 	font-size: 60px;
