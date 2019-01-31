@@ -2,17 +2,18 @@
 require '../resources/simple_html_dom.php';
 
 class User {
-    const SEASON = 8;
-	const GAME_MODES = [
-		10 => '1_', 
-		11 => '2_', 
-		12 => '3s_', 
-		13 => '3_'
+	const PLAYLISTS = [
+//		'0_' => 'Un-Ranked',
+		'1_' => 'Ranked Duel 1v1',
+		'2_' => 'Ranked Doubles 2v2',
+		'3_' => 'Ranked Standard 3v3',
+		'3s_' => 'Ranked Solo Standard 3v3'
 	];
-    const DATA_CATEGORIES = [
-		'rankPoints' => 'mmr',
-		'tier' => 'tier',
-		'division' => 'division'
+	const DIVS = [
+		0 => ' I ',
+		1 => ' II ',
+		2 => ' III ',
+		3 => ' IV'
 	];
     private $api_key;
     private $db;
@@ -67,7 +68,6 @@ class User {
         $account_info['guid'] = $safe_user_id;
         $account_info['steam_id'] = $steam_id;
         $account_info['account_name'] = $account_name;
-        
              
         $stmt = $this->db->prepare("INSERT INTO users (guid, steam_id, account_name, display_name, avatar, _1_mmr, _1_tier, _1_division, _2_mmr, _2_tier, _2_division, _3s_mmr, _3s_tier, _3s_division, _3_mmr, _3_tier, _3_division) 
                                     VALUES (:guid, :steam_id, :account_name, :display_name, :avatar, :1_mmr, :1_tier, :1_division, :2_mmr, :2_tier, :2_division, :3s_mmr, :3s_tier, :3s_division, :3_mmr, :3_tier, :3_division)");
@@ -162,7 +162,9 @@ class User {
 			$account_data[$playlist.'mmr'] = str_replace(',', '', $mmr[0]);
 			$account_data[$playlist.'division'] = $this->get_div($row->find('td', 1)->plaintext);
 		}
-
+		
+		$this->fill_in_the_blanks($account_data);
+		
 		$steam64id = $this->get_steam64id($steam_id);
 		$avatar_and_displayname = $this->get_avatar_and_displayname($steam64id);
 		$account_data['avatar'] = $avatar_and_displayname['avatar'];
@@ -171,17 +173,23 @@ class User {
 		return $account_data;
     }
 	
+	private function fill_in_the_blanks(&$account_data)
+	{
+		foreach (self::PLAYLISTS as $id => $str) {
+			if (!in_array($id.'tier', array_keys($account_data))) {
+				$blanks = [
+					$id.'tier' => 0,
+					$id.'mmr' => 0,
+					$id.'division' => 0
+				];
+				$account_data = array_merge($account_data, $blanks);
+			}
+		}
+	}
+	
 	private function get_playlist_id($txt)
 	{
-		$playlists = [
-//			'0_' => 'Un-Ranked',
-			'1_' => 'Ranked Duel 1v1',
-			'2_' => 'Ranked Doubles 2v2',
-			'3_' => 'Ranked Standard 3v3',
-			'3s_' => 'Ranked Solo Standard 3v3'
-		];
-		
-		foreach ($playlists as $id => $str)
+		foreach (self::PLAYLISTS as $id => $str)
 		{
 			if (strpos($txt, $str) !== false)
 				return $id;		
@@ -192,15 +200,8 @@ class User {
 	
 	private function get_div($txt)
 	{
-		$divs = [
-			0 => ' I ',
-			1 => ' II ',
-			2 => ' III ',
-			3 => ' IV'
-		];
-		
 		$pos = strpos($txt, 'Division');
-		foreach ($divs as $id => $str)
+		foreach (self::DIVS as $id => $str)
 		{
 			if (strpos($txt." ", $str, $pos) !== false)
 				return $id;
@@ -220,6 +221,8 @@ class User {
 	{
 		$url = "https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/?key=".$this->api_key."&vanityurl=".$vanity;
 		$response = json_decode(file_get_html($url)->plaintext, true);
+		if ($response['response']['message'] == 'No match')
+			return $vanity;
 		return $response['response']['steamid'];
 	}
 
