@@ -86,8 +86,6 @@ class User {
 			die();
 		}
 		
-		$account_info = $this->get_batch_rank_info($steam_ids);
-		
 		$stmt = $this->db->prepare("UPDATE users SET
 										display_name = :display_name, avatar = :avatar,
 										_1_mmr = :1_mmr, _1_tier = :1_tier, _1_division = :1_division, 
@@ -96,8 +94,8 @@ class User {
 										_3_mmr = :3_mmr, _3_tier = :3_tier, _3_division = :3_division
 									WHERE guid = :guid AND steam_id = :steam_id");
 									
-		foreach ($account_info as $steam_id => $account) {
-			$update_arr = $account;
+		foreach ($steam_ids as $steam_id) {
+			$update_arr = $this->get_single_account_info($steam_id);
 			$update_arr['steam_id'] = $steam_id;
 			$update_arr['guid'] = $this->user_id;
 			
@@ -172,55 +170,6 @@ class User {
 		
 		return $account_data;
     }
-	
-	private function get_batch_rank_info($steam_ids) 
-	{
-		$this->check_rate_limit();
-		
-		$payload_arr = [];
-		$batch = $i = 0;
-
-		foreach ($steam_ids as $id) { 
-			$payload_arr[$batch][] = ["platformId" => "1", "uniqueId" => $id];
-			$i++;
-			if ($i == 10) {
-				$batch++;
-				$i = 0;
-			}
-		}
-		
-		foreach ($payload_arr as $batch => $payload) {
-			$curl = curl_init();
-			$url = "https://api.rocketleaguestats.com/v1/player/batch";
-			curl_setopt_array($curl, array(
-				CURLOPT_RETURNTRANSFER => 1,
-				CURLOPT_URL => $url,
-				CURLOPT_HTTPHEADER => array("Authorization: ". $this->api_key, 'Content-Type:application/json'),
-				CURLOPT_POSTFIELDS => json_encode($payload)
-			));
-			
-			$response = json_decode(curl_exec($curl),true);
-		
-			foreach ($response as $i => $player) {
-				$account_index = $batch * 10 + $i;
-				foreach (self::GAME_MODES as $mode_number => $game_mode) {
-					if (!isset($player['rankedSeasons'][self::SEASON][$mode_number])) {
-						foreach (self::DATA_CATEGORIES as $theirs => $mine) {
-							$account_data[$steam_ids[$account_index]][$game_mode.$mine] = 0;
-						}
-						continue;
-					}
-					foreach (self::DATA_CATEGORIES as $theirs => $mine) {
-						$account_data[$steam_ids[$account_index]][$game_mode.$mine] = $player['rankedSeasons'][self::SEASON][$mode_number][$theirs];
-					}
-				}
-				$account_data[$steam_ids[$account_index]]['display_name'] = $player['displayName'];
-				$account_data[$steam_ids[$account_index]]['avatar'] = $player['avatar'];
-			}
-		}
-		
-		return $account_data;
-	}
 	
 	private function get_playlist_id($txt)
 	{

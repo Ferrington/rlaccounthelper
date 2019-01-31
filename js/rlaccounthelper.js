@@ -49,9 +49,11 @@ $('#update-ranks').click(update_ranks);
 function update_ranks() {
 	start_loading_animation($('#update-ranks'));
 	$.post(ajax_url, {user_id: user_id, method: 'update_ranks'}).then(function(data) {
+		console.log(data);
 		draw_table();
 		stop_loading_animation($('#update-ranks'));
 	}, function(data) {
+		console.log(data);
 		//error
 		stop_loading_animation($('#update-ranks'));
 	});
