@@ -1,4 +1,5 @@
 <?php
+require '../resources/simple_html_dom.php';
 
 class User {
     const SEASON = 8;
@@ -145,37 +146,31 @@ class User {
 
     private function get_single_account_info($steam_id) 
 	{
-		$this->check_rate_limit();
+		$html = file_get_html('https://rocketleague.tracker.network/profile/steam/'.$steam_id);
+	
+		if (!$table = $html->find('.card-table', 1))
+			return false;
 
-        $curl = curl_init();
-        $url = "https://api.rocketleaguestats.com/v1/player?unique_id=". $steam_id ."&platform_id=1";
+		$tbody = $table->find('tbody', 0);
+		
+		$account_data = [];
+		foreach ($tbody->find('tr') as $row) {
+			$playlist = $this->get_playlist_id($row->find('td', 1)->plaintext);
+			if ($playlist === false)
+				continue;
+			
+			$account_data[$playlist.'tier'] = str_replace('.png','',substr($row->find('td', 0)->find('img', 0)->src, 21));
+			$mmr = explode(' ', $row->find('td', 3)->plaintext, 2);
+			$account_data[$playlist.'mmr'] = str_replace(',', '', $mmr[0]);
+			$account_data[$playlist.'division'] = $this->get_div($row->find('td', 1)->plaintext);
+		}
 
-        curl_setopt_array($curl, array(
-            CURLOPT_RETURNTRANSFER => 1,
-            CURLOPT_URL => $url,
-            CURLOPT_HTTPHEADER => array("Authorization: ". $this->api_key)
-        ));
-
-        $response = json_decode(curl_exec($curl),true);
-
-        if (isset($response['displayName'])) {
-            foreach (self::GAME_MODES as $mode_number => $game_mode) {
-				if (!isset($response['rankedSeasons'][self::SEASON][$mode_number])) {
-					foreach (self::DATA_CATEGORIES as $theirs => $mine) {
-						$account_data[$game_mode.$mine] = 0;
-					}
-					continue;
-				}
-                foreach (self::DATA_CATEGORIES as $theirs => $mine) {
-                    $account_data[$game_mode.$mine] = $response['rankedSeasons'][self::SEASON][$mode_number][$theirs] ?? 0;
-                }
-            }
-            $account_data['display_name'] = $response['displayName'];
-			$account_data['avatar'] = $response['avatar'];
-            return $account_data;
-        } else {
-            return false;
-        }
+		$steam64id = $this->get_steam64id($steam_id);
+		$avatar_and_displayname = $this->get_avatar_and_displayname($steam64id);
+		$account_data['avatar'] = $avatar_and_displayname['avatar'];
+		$account_data['display_name'] = $avatar_and_displayname['displayname'];
+		
+		return $account_data;
     }
 	
 	private function get_batch_rank_info($steam_ids) 
@@ -227,21 +222,58 @@ class User {
 		return $account_data;
 	}
 	
-	//add delay if request as been made recently
-	private function check_rate_limit() 
+	private function get_playlist_id($txt)
 	{
-		$diff = $this->db->query("SELECT ROUND(TIMESTAMPDIFF(MICROSECOND, last_request, NOW(3))) FROM rate_limit WHERE id = 1")->fetchColumn();
+		$playlists = [
+//			'0_' => 'Un-Ranked',
+			'1_' => 'Ranked Duel 1v1',
+			'2_' => 'Ranked Doubles 2v2',
+			'3_' => 'Ranked Standard 3v3',
+			'3s_' => 'Ranked Solo Standard 3v3'
+		];
 		
-		$sleepy_time = $diff < 1000000 ? 1000000 - $diff : 0;
-		
-		$sql = "UPDATE rate_limit SET last_request = (SUBSTRING(DATE_ADD(NOW(3), INTERVAL ". $sleepy_time ." MICROSECOND),1,23)) WHERE id = 1";
-		
-		$this->db->query($sql);
-		
-		if ($diff < 1000000) {
-			usleep($sleepy_time);			
+		foreach ($playlists as $id => $str)
+		{
+			if (strpos($txt, $str) !== false)
+				return $id;		
 		}
+
+		return false;
 	}
+	
+	private function get_div($txt)
+	{
+		$divs = [
+			0 => ' I ',
+			1 => ' II ',
+			2 => ' III ',
+			3 => ' IV'
+		];
+		
+		$pos = strpos($txt, 'Division');
+		foreach ($divs as $id => $str)
+		{
+			if (strpos($txt." ", $str, $pos) !== false)
+				return $id;
+		}
+		
+		return false;
+	}
+	
+	private function get_avatar_and_displayname($steam64id)
+	{
+		$url = "http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key=".$this->api_key."&steamids=".$steam64id;
+		$response = json_decode(file_get_html($url)->plaintext, true);
+		return ['avatar' => $response['response']['players'][0]['avatarfull'], 'displayname' => $response['response']['players'][0]['personaname']];
+	}
+
+	private function get_steam64id($vanity)
+	{
+		$url = "https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/?key=".$this->api_key."&vanityurl=".$vanity;
+		$response = json_decode(file_get_html($url)->plaintext, true);
+		return $response['response']['steamid'];
+	}
+
   
     private function generate_user_id() 
     {

@@ -55,7 +55,6 @@ function update_ranks() {
 		//error
 		stop_loading_animation($('#update-ranks'));
 	});
-	//
 }
 function add_account() {
 	clear_error();

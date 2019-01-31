@@ -28,6 +28,9 @@ body {
 .artist-credit p {
 	margin:0;
 }
+.artist-credit a {
+	color: #66FCF1;
+}
 .add-account {
 	margin: 50px auto;
 	margin-top:25px;
