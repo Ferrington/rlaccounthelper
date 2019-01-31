@@ -16,6 +16,12 @@ body {
   text-align:center;
   padding-top:25px;
 }
+td.smol-font {
+	font-size:11px;
+}
+td.smoller-font {
+	font-size:13px;
+}
 .rls-container {
 	display:inline-block;
 	vertical-align:middle;
@@ -102,6 +108,7 @@ thead th:nth-child(5), thead th:nth-child(6), thead th:nth-child(7), thead th:nt
 .long-word {
 	word-wrap: break-word;
 	word-break: break-all;
+		line-height:40px;
 }
 .account-table-container thead th {
 	background-color:#1F2833 !important;
@@ -166,4 +173,5 @@ table.tablesorter thead tr th.headerSortDown {
 	background-repeat: no-repeat;
 	background-position: center right;
 }
+
 

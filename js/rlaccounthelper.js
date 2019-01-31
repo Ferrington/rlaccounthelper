@@ -105,9 +105,9 @@ function draw_table() {
 		
 		$.each(account_data, function(key, row) {
 			let html = "<tr><td class='avatar-td'><div class='avatar-container'><img src='"+ row.avatar +"' class='img-fluid' alt='steam avatar'></div></td>";
-			html += "<td class='long-word'>"+ row.steam_id +"</td>";
-			html += "<td class='long-word'>"+ row.account_name +"</td>";
-			html += "<td class='long-word'>"+ row.display_name +"</td>";
+			html += "<td class='long-word"+ get_font_size(row.steam_id) +"'>"+ row.steam_id +"</td>";
+			html += "<td class='long-word"+ get_font_size(row.account_name) +"'>"+ row.account_name +"</td>";
+			html += "<td class='long-word"+ get_font_size(row.display_name) +"'>"+ row.display_name +"</td>";
 			html += "<td class='rank-td'>"+ format_ranks("_1_", row) + "</td>";
 			html += "<td class='rank-td'>"+ format_ranks("_2_", row) + "</td>";
 			html += "<td class='rank-td'>"+ format_ranks("_3s_", row) + "</td>";
@@ -118,6 +118,17 @@ function draw_table() {
 		
 		$("#account-table").trigger("update");
 	});
+}
+
+function get_font_size(str) {
+	let font_class = '';
+	if (str.length >= 12) {
+		font_class = ' smol-font';
+	} else if (str.length >= 15) {
+		font_class = ' smoller-font';
+	}
+	
+	return font_class;
 }
 function format_ranks(playlist, row) {
 	var rank_images = {
