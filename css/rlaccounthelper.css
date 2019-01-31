@@ -17,10 +17,10 @@ body {
   padding-top:25px;
 }
 td.smol-font {
-	font-size:11px;
+	font-size:13px;
 }
 td.smoller-font {
-	font-size:13px;
+	font-size:11px;
 }
 .rls-container {
 	display:inline-block;

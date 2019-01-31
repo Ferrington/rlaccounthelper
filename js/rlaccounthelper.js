@@ -122,10 +122,10 @@ function draw_table() {
 
 function get_font_size(str) {
 	let font_class = '';
-	if (str.length >= 12) {
-		font_class = ' smol-font';
-	} else if (str.length >= 15) {
+	if (str.length >= 17) {
 		font_class = ' smoller-font';
+	} else if (str.length >= 12) {
+		font_class = ' smol-font';
 	}
 	
 	return font_class;
